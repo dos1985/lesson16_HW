@@ -1,21 +1,23 @@
+from sqlalchemy import Column
 from config import db
-from flask_sqlalchemy import SQLAlchemy, Column
+
 
 
 class Users(db.Model):
     __tablename__ = 'user'
-    id = Column(db.Integer, primary_key=True)
-    first_name = Column(db.String(100))
-    last_name = Column(db.String(100))
-    age = Column(db.Integer)
-    email = Column(db.String(100))
-    role = Column(db.String(100))
-    phone = Column(db.Integer(100))
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
+    age = db.Column(db.Integer)
+    email = db.Column(db.String(100))
+    role = db.Column(db.String(100))
+    phone = db.Column(db.String(100))
 
     def to_dict(self):
         return {"id": self.id,
                 "first_name": self.first_name,
                 "last_name": self.last_name,
+                "age": self.age,
                 "email": self.email,
                 "role": self.role,
                 "phone": self.phone
@@ -23,16 +25,17 @@ class Users(db.Model):
 
 class Order(db.Model):
     __tablename__ = 'order'
-    id = Column(db.Integer, primary_key=True)
-    name = Column(db.String(100))
-    description = Column(db.String(100))
-    start_date = Column(db.DateTime)
-    end_date = Column(db.DateTime)
-    address = Column(db.String(100))
-    price = Column(db.Integer)
-    customer_id = Column(db.Integer, db.ForeignKey('user.id'))
-    executor_id = Column(db.Integer, db.ForeignKey('user.id'))
-
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    description = db.Column(db.String(100))
+    start_date = db.Column(db.Integer)
+    end_date = db.Column(db.Integer)
+    address = db.Column(db.String(100))
+    price = db.Column(db.Integer)
+    customer_id = db.Column(db.Integer, db.ForeignKey(f'{Users.__tablename__}.id', ondelete="CASCADE"))
+    executor_id = db.Column(db.Integer, db.ForeignKey(f'{Users.__tablename__}.id'))
+    customer = db.relationship('Users', foreign_keys='Order.customer_id')
+    executor = db.relationship('Users', foreign_keys='Order.executor_id')
 
     def to_dict(self):
         return {"id": self.id,
@@ -47,14 +50,17 @@ class Order(db.Model):
              }
 
 
-class Offers(db.Model):
-    __tablename__ = 'offers'
-    id = Column(db.Integer, primary_key=True)
-    order_id = Column(db.Integer, db.ForeignKey('order_id'))
-    executor = Column(db.Integer, db.ForeignKey('user.id'))
+class Offer(db.Model):
+    __tablename__ = 'offer'
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey(f'{Order.__tablename__}.id', ondelete="CASCADE"))
+    executor_id = db.Column(db.Integer, db.ForeignKey(f'{Users.__tablename__}.id', ondelete="CASCADE"))
+    user = db.relationship('Users')
+    order = db.relationship('Order')
+
 
     def to_dict(self):
         return {"id": self.id,
-                "order_id": self.price,
+                "order_id": self.order_id,
                 "executor_id": self.executor_id,
-             }
+                }
